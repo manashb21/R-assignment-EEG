@@ -11,7 +11,6 @@ time = read.csv("time.csv", header = F, skip = 1)
 time = as.matrix(rbind(0, time))
 
 #create time series objects 
-#ts(data = NA, start = 1, end = numeric(), frequency = 1, deltat = 1, ts.eps = getOption("ts.eps"), class = , names = )
 X.ts <- ts(X, start = c(min(time), max(time)),frequency = 1)
 Y.ts <- ts(Y, start = c(min(time), max(time)),frequency = 1)
 
