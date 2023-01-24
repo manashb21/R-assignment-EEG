@@ -2,6 +2,9 @@
 X = as.matrix(read.csv("X.csv", header = F))
 colnames(X) <- c("X1", "X2", "X3", "X4")
 
+Xdf = read.csv("X.csv")
+colnames(Xdf) <- c("X1", "X2", "X3", "X4")
+
 #import Y data
 Y = as.matrix(read.csv("y.csv", header = F))
 colnames(Y) <- c("Y")
@@ -10,6 +13,7 @@ colnames(Y) <- c("Y")
 time = read.csv("time.csv", header = F, skip = 1)
 time = as.matrix(rbind(0, time))
 
+#Creating Time series Plot
 #create time series objects 
 X.ts <- ts(X, start = c(min(time), max(time)),frequency = 1)
 Y.ts <- ts(Y, start = c(min(time), max(time)),frequency = 1)
@@ -17,3 +21,34 @@ Y.ts <- ts(Y, start = c(min(time), max(time)),frequency = 1)
 #plotting the graphs
 plot(X.ts, main = "Time series plot of X signal", xlab = "Time", ylab = "Input Signal")
 plot(Y.ts, main = "Time series plot of Y signal", xlab = "Time", ylab = "Output Signal")
+
+#Creating density plot 
+#density plot of X signal
+dis = density(X)
+par(mfrow = c(1,2))
+plot(dis, main = "Density Plot of Input Signal")
+#histogram of X signal
+hist(X, freq = FALSE, main = "Histogram Plot of Input Signal")
+
+#both density and histogram
+par(mfrow = c(1,1))
+hist(X, freq = FALSE, main = "Histogram Plot of Input Signal")
+lines(dis, lwd = 2, col = "darkblue")
+rug(jitter(X))
+
+#density plot of X1 signal
+dis_X1 = density(X[,"X1"])
+hist(X[,"X1"], freq = FALSE, main = "Histogram Plot of X1")
+lines(dis, lwd = 2, col = "")
+rug(jitter(X[,"X1"]))
+
+
+
+
+
+
+
+
+
+
+
