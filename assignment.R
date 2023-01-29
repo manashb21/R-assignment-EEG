@@ -1,3 +1,6 @@
+library(matlib)
+library(ggplot2)
+library(rsample)
 #import X data
 X = as.matrix(read.csv("X.csv", header = F))
 colnames(X) <- c("X1", "X2", "X3", "X4")
@@ -95,24 +98,141 @@ abline(lm(X[,'X4'] ~ Y), col = 'red')
 
 
 #TASK 2
+ones = matrix(1 , length(X)/4,1)
+ones
 #2.1
 #estimating model parameters using Least squares theta-hat
-Xmodel1 <- cbind((X[,'X4']),(X[,'X1'])^2,(X[,'X1'])^3,(X[,'X2'])^4,(X[,'X1'])^4)
-model1thetahat = solve(t(Xmodel1)%*%Xmodel1)%*%t(Xmodel1)%*%Y
+Xmodel1 <- cbind(ones,(X[,'X4']),(X[,'X1'])^2,(X[,'X1'])^3,(X[,'X2'])^4,(X[,'X1'])^4)
+model1_thetahat = solve(t(Xmodel1)%*%Xmodel1)%*%t(Xmodel1)%*%Y
 
-Xmodel2 <- cbind((X[,'X4']),(X[,'X1'])^3,(X[,'X3'])^4)
-model2thetahat = solve(t(Xmodel2)%*%Xmodel2)%*%t(Xmodel2)%*%Y
+Xmodel2 <- cbind(ones,(X[,'X4']),(X[,'X1'])^3,(X[,'X3'])^4)
+model2_thetahat = solve(t(Xmodel2)%*%Xmodel2)%*%t(Xmodel2)%*%Y
 
-Xmodel3 <- cbind((X[,'X3'])^3,(X[,'X3'])^4)
-model3thetahat = solve(t(Xmodel3)%*%Xmodel3)%*%t(Xmodel3)%*%Y
+Xmodel3 <- cbind(ones,(X[,'X3'])^3,(X[,'X3'])^4)
+model3_thetahat = solve(t(Xmodel3)%*%Xmodel3)%*%t(Xmodel3)%*%Y
 
-Xmodel4 <- cbind((X[,'X2']),(X[,'X1'])^3,(X[,'X3'])^4)
-model4thetahat = solve(t(Xmodel4)%*%Xmodel4)%*%t(Xmodel4)%*%Y
+Xmodel4 <- cbind(ones,(X[,'X2']),(X[,'X1'])^3,(X[,'X3'])^4)
+model4_thetahat = solve(t(Xmodel4)%*%Xmodel4)%*%t(Xmodel4)%*%Y
 
-Xmodel5 <- cbind((X[,'X4']),(X[,'X1'])^2,(X[,'X1'])^3,(X[,'X3'])^4)
-model5thetahat = solve(t(Xmodel5)%*%Xmodel5)%*%t(Xmodel5)%*%Y
+Xmodel5 <- cbind(ones,(X[,'X4']),(X[,'X1'])^2,(X[,'X1'])^3,(X[,'X3'])^4)
+model5_thetahat = solve(t(Xmodel5)%*%Xmodel5)%*%t(Xmodel5)%*%Y
+
+#Calculating Y-hat and RSS Model 1
+Y_hat_m1 = Xmodel1 %*% model1_thetahat
+Y_hat_m1
+#Calculating RSS
+RSS_Model_1=sum((Y-Y_hat_m1)^2)
+RSS_Model_1
+#Calculating Y-hat and RSS of model 2
+Y_hat_m2 = Xmodel2 %*% model2_thetahat
+Y_hat_m2
+RSS_Model_2=sum((Y-Y_hat_m2)^2)
+RSS_Model_2
+#Calculating Y-hat and RSS of model 3
+Y_hat_m3 = Xmodel3 %*% model3_thetahat
+Y_hat_m3
+RSS_Model_3=sum((Y-Y_hat_m3)^2)
+RSS_Model_3
+#Calculating Y-hat and RSS of model 4
+Y_hat_m4 = Xmodel4 %*% model4_thetahat
+Y_hat_m4
+RSS_Model_4=sum((Y-Y_hat_m4)^2)
+RSS_Model_4
+#Calculating Y-hat and RSS of model 5
+Y_hat_m5 = Xmodel5 %*% model5_thetahat
+Y_hat_m5
+RSS_Model_5=sum((Y-Y_hat_m5)^2)
+RSS_Model_5
 
 
+#calculating variances for all models
+N = length(Y)
+variance_model1 = RSS_Model_1/(N-1)
+variance_model2 = RSS_Model_2/(N-1)
+variance_model3 = RSS_Model_3/(N-1)
+variance_model4 = RSS_Model_4/(N-1)
+variance_model5 = RSS_Model_5/(N-1)
 
+#calculation of loglikelihood
+#for model 1
+likelihood_1 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model1))-(1/(2*variance_model1))*RSS_Model_1
+likelihood_1
+#for model 1
+likelihood_2 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model2))-(1/(2*variance_model2))*RSS_Model_2
+likelihood_2
+#for model 1
+likelihood_3 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model3))-(1/(2*variance_model3))*RSS_Model_3
+likelihood_3
+#for model 1
+likelihood_4 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model4))-(1/(2*variance_model4))*RSS_Model_4
+likelihood_4
+#for model 1
+likelihood_5 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model5))-(1/(2*variance_model5))*RSS_Model_5
+likelihood_5
+
+#calculation of AIC (Akaike Information Criterion) and BIC
+##Calculating AIC and BIC of model 1
+K_model1<-length(model1_thetahat)
+K_model1
+AIC_model1=2*K_model1-2*likelihood_1
+AIC_model1
+BIC_model1=K_model1*log(N)-2*likelihood_1
+BIC_model1
+
+##Calculating AIC and BIC of model 2
+K_model2<-length(model2_thetahat)
+K_model2
+AIC_model2=2*K_model2-2*likelihood_2
+AIC_model2
+BIC_model2=K_model2*log(N)-2*likelihood_2
+BIC_model2
+
+##Calculating AIC and BIC of model 3
+K_model3<-length(model3_thetahat)
+K_model3
+AIC_model3=2*K_model3-2*likelihood_3
+AIC_model3
+BIC_model3=K_model3*log(N)-2*likelihood_3
+BIC_model3
+
+##Calculating AIC and BIC of model 4
+K_model4<-length(model4_thetahat)
+K_model4
+AIC_model4=2*K_model4-2*likelihood_4
+AIC_model4
+BIC_model4=K_model4*log(N)-2*likelihood_4
+BIC_model4
+
+##Calculating AIC and BIC of model 5
+K_model5<-length(model5_thetahat)
+K_model5
+AIC_model5=2*K_model5-2*likelihood_5
+AIC_model5
+BIC_model5=K_model5*log(N)-2*likelihood_5
+BIC_model5
+
+## Task 2.5
+par(mfrow = c(3,2))
+## Error of model1
+model1_error <- Y-Y_hat_m1
+## Plotting the graph QQplot and QQ line of model 1
+qqnorm(model1_error, col = "darkcyan",main = "QQ plot of model 1")
+qqline(model1_error, col = "red",lwd=1)
+
+model2_error <- Y-Y_hat_m2
+qqnorm(model2_error, col = "darkcyan",main = "QQ plot of model 2")
+qqline(model2_error, col = "red",lwd=1)
+
+model3_error <- Y-Y_hat_m3
+qqnorm(model3_error, col = "darkcyan",main = "QQ plot of model 3")
+qqline(model3_error, col = "red",lwd=1)
+
+model4_error <- Y-Y_hat_m4
+qqnorm(model4_error, col = "darkcyan",main = "QQ plot of model 4")
+qqline(model4_error, col = "red",lwd=1)
+
+model5_error <- Y-Y_hat_m5
+qqnorm(model5_error, col = "darkcyan",main = "QQ plot of model 5")
+qqline(model5_error, col = "red",lwd=1)
 
 
