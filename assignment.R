@@ -5,8 +5,8 @@ library(rsample)
 X = as.matrix(read.csv("X.csv", header = F))
 colnames(X) <- c("X1", "X2", "X3", "X4")
 
-Xdf = read.csv("X.csv")
-colnames(Xdf) <- c("X1", "X2", "X3", "X4")
+#Xdf = read.csv("X.csv")
+#colnames(Xdf) <- c("X1", "X2", "X3", "X4")
 
 #import Y data
 Y = as.matrix(read.csv("y.csv", header = F))
@@ -157,16 +157,16 @@ variance_model5 = RSS_Model_5/(N-1)
 #for model 1
 likelihood_1 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model1))-(1/(2*variance_model1))*RSS_Model_1
 likelihood_1
-#for model 1
+#for model 2
 likelihood_2 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model2))-(1/(2*variance_model2))*RSS_Model_2
 likelihood_2
-#for model 1
+#for model 3
 likelihood_3 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model3))-(1/(2*variance_model3))*RSS_Model_3
 likelihood_3
-#for model 1
+#for model 4
 likelihood_4 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model4))-(1/(2*variance_model4))*RSS_Model_4
 likelihood_4
-#for model 1
+#for model 5
 likelihood_5 = -(N/2)*(log(2*pi))-(N/2)*(log(variance_model5))-(1/(2*variance_model5))*RSS_Model_5
 likelihood_5
 
@@ -234,5 +234,44 @@ qqline(model4_error, col = "red",lwd=1)
 model5_error <- Y-Y_hat_m5
 qqnorm(model5_error, col = "darkcyan",main = "QQ plot of model 5")
 qqline(model5_error, col = "red",lwd=1)
+
+### Task 2.7 ## Splitting the data of y into 2 form i.e. Training and testing data set.
+set.seed(1353)
+split_Y<-initial_split(data = as.data.frame(Y),prop=.7)
+# Training Y data split 
+Y_training_set<-training(split_Y) 
+Y_testing_set<-as.matrix(testing(split_Y)) 
+## Testing Y data split 
+Y_training_data<-as.matrix(Y_training_set)
+
+
+## Splitting the data of X into 2 form i.e. Training and testing data set. 
+split_X<-initial_split(data = as.data.frame(X),prop=.7) 
+## Training X data split 
+X_training_set<-training(split_X) 
+## Testing X data split 
+X_testing_set<-as.matrix(testing(split_X)) 
+X_testing_data<-as.matrix(X_testing_set) 
+X_training_data<-as.matrix(X_training_set)
+
+
+### Estimating model parameters using Training set 
+training_ones=matrix(1 , length(X_training_set$X1),1) 
+#model ->(X[,'X4']),(X[,'X1'])^2,(X[,'X1'])^3,(X[,'X3'])^4)
+X_training_model<-cbind(training_ones,X_training_set[,"X4"],(X_training_set[,"X1"])^2,(X_training_set[ ,"X1"])^3,(X_training_set[,"X3"])^4) 
+training_thetahat=solve(t(X_training_model) %*% X_training_model) %*% t(X_training_model) %*% Y_training_data
+
+### Model out/Prediction 
+#creating X testing model 
+testing_ones = matrix(1, length(X_testing_set[,"X1"]), 1)
+X_testing_model = cbind(testing_ones,X_testing_set[,"X4"],(X_testing_set[,"X1"])^2,(X_testing_set[ ,"X1"])^3,(X_testing_set[,"X3"])^4) 
+Y_testing_hat = X_testing_model%*% training_thetahat 
+Y_testing_hat 
+RSS_testing=sum((Y_testing_set-Y_testing_hat)^2) 
+RSS_testing
+
+
+
+
 
 
