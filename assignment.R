@@ -41,21 +41,25 @@ Xdf = read.csv("X.csv")
 colnames(Xdf) <- c("X1", "X2", "X3", "X4")
 ggplot(Xdf, aes(x=X1))+
   geom_histogram(aes(y=after_stat(density)), colour="black", fill="white")+ 
-  geom_vline(aes(xintercept=mean(Y)), color="#8B3626", linetype="dashed", size=0.6)+
-  geom_rug(colour = "#2F4F4F")+
-  geom_density(alpha=.1, fill="#FFE1FF")
+  #geom_vline(aes(xintercept=mean(Y)), color="#8B3626", linetype="dashed", size=0.4)+
+  geom_rug()+
+  geom_density(alpha=.1, fill="#FFE1FF")+
+  ggtitle("Histogram and Density Plot of Input Signal X1")
 ggplot(Xdf, aes(x=X2))+
   geom_histogram(aes(y=after_stat(density)), colour="black", fill="white")+ 
-  geom_rug(colour = "#2F4F4F")+
-  geom_density(alpha = .1, fill="#FFB90F")
+  geom_rug()+
+  geom_density(alpha = .1, fill="#FFB90F")+
+  ggtitle("Histogram and Density Plot of Input Signal X2")
 ggplot(Xdf, aes(x=X3))+
   geom_histogram(aes(y=after_stat(density)), colour="black", fill="white")+ 
-  geom_rug(colour = "#2F4F4F")+
-  geom_density(alpha = .1, fill="#87CEFF")
+  geom_rug()+
+  geom_density(alpha = .1, fill="#87CEFF")+
+  ggtitle("Histogram and Density Plot of Input Signal X3")
 ggplot(Xdf, aes(x=X4))+
   geom_histogram(aes(y=after_stat(density)), colour="black", fill="white")+ 
-  geom_rug(colour = "#2F4F4F")+
-  geom_density(alpha = .1, fill="#FFBBFF")
+  geom_rug()+
+  geom_density(alpha = .1, fill="#FFBBFF")+
+  ggtitle("Histogram and Density Plot of Input Signal X4")
 
 #density plot of X1 signal
 dis_X1 = density(X[,"X1"])
