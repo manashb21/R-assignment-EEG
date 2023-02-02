@@ -5,9 +5,6 @@ library(rsample)
 X = as.matrix(read.csv("X.csv", header = F))
 colnames(X) <- c("X1", "X2", "X3", "X4")
 
-#Xdf = read.csv("X.csv")
-#colnames(Xdf) <- c("X1", "X2", "X3", "X4")
-
 #import Y data
 Y = as.matrix(read.csv("y.csv", header = F))
 colnames(Y) <- c("Y")
@@ -28,16 +25,37 @@ plot(Y.ts, main = "Time series plot of Y signal", xlab = "Time", ylab = "Output 
 #Creating density plot 
 #density plot of X signal
 dis = density(X)
-par(mfrow = c(1,2))
-plot(dis, main = "Density Plot of Input Signal")
+#par(mfrow = c(1,2))
+#plot(dis, main = "Density Plot of Input Signal")
 #histogram of X signal
-hist(X, freq = FALSE, main = "Histogram Plot of Input Signal")
+#hist(X, freq = FALSE, main = "Histogram Plot of Input Signal")
 
 #both density and histogram
 par(mfrow = c(1,1))
-hist(X, freq = FALSE, main = "Histogram Plot of Input Signal")
-lines(dis, lwd = 2, col = "darkblue")
+hist(X, freq = FALSE, main = "Density and Histogram Plot of Input Signal")
+lines(dis, lwd = 2, col = "tomato2")
 rug(jitter(X))
+
+#density plots using GGPLOT
+Xdf = read.csv("X.csv")
+colnames(Xdf) <- c("X1", "X2", "X3", "X4")
+ggplot(Xdf, aes(x=X1))+
+  geom_histogram(aes(y=after_stat(density)), colour="black", fill="white")+ 
+  geom_vline(aes(xintercept=mean(Y)), color="#8B3626", linetype="dashed", size=0.6)+
+  geom_rug(colour = "#2F4F4F")+
+  geom_density(alpha=.1, fill="#FFE1FF")
+ggplot(Xdf, aes(x=X2))+
+  geom_histogram(aes(y=after_stat(density)), colour="black", fill="white")+ 
+  geom_rug(colour = "#2F4F4F")+
+  geom_density(alpha = .1, fill="#FFB90F")
+ggplot(Xdf, aes(x=X3))+
+  geom_histogram(aes(y=after_stat(density)), colour="black", fill="white")+ 
+  geom_rug(colour = "#2F4F4F")+
+  geom_density(alpha = .1, fill="#87CEFF")
+ggplot(Xdf, aes(x=X4))+
+  geom_histogram(aes(y=after_stat(density)), colour="black", fill="white")+ 
+  geom_rug(colour = "#2F4F4F")+
+  geom_density(alpha = .1, fill="#FFBBFF")
 
 #density plot of X1 signal
 dis_X1 = density(X[,"X1"])
@@ -64,11 +82,19 @@ lines(dis_X4, lwd = 2, col = "seagreen")
 rug(jitter(X[,"X4"]))
 
 #density plot of Y signal
-#density plot of X1 signal
 dis_Y = density(Y)
 hist(Y, freq = FALSE, main = "Histogram Plot of Y")
 lines(dis_Y, lwd = 2, col = "purple")
 rug(jitter(Y))
+
+#density plot of Y using GGPLOT
+Ydf = read.csv("Y.csv")
+colnames(Ydf) <- c("Y")
+ggplot(Ydf, aes(x=Y))+
+  geom_histogram(aes(y=after_stat(density)), colour="black", fill="white")+ 
+  geom_vline(aes(xintercept=mean(Y)), color="#8B3626", linetype="dashed", size=0.6) +
+  geom_rug()+
+  geom_density(alpha = .2, fill="#FFE7BA")
 
 #scatter plot between X1 and Y
 par(mfrow = c(2,2))
@@ -235,6 +261,9 @@ model5_error <- Y-Y_hat_m5
 qqnorm(model5_error, col = "darkcyan",main = "QQ plot of model 5")
 qqline(model5_error, col = "red",lwd=1)
 
+## Chose model 2 based on the values of AIC and BIC, (Lower the better), and low RSS means
+## better fit of the regression equation for the data 
+
 ### Task 2.7 ## Splitting the data of y into 2 form i.e. Training and testing data set.
 set.seed(1353)
 split_Y<-initial_split(data = as.data.frame(Y),prop=.7)
@@ -257,21 +286,78 @@ X_training_data<-as.matrix(X_training_set)
 
 ### Estimating model parameters using Training set 
 training_ones=matrix(1 , length(X_training_set$X1),1) 
-#model ->(X[,'X4']),(X[,'X1'])^2,(X[,'X1'])^3,(X[,'X3'])^4)
-X_training_model<-cbind(training_ones,X_training_set[,"X4"],(X_training_set[,"X1"])^2,(X_training_set[ ,"X1"])^3,(X_training_set[,"X3"])^4) 
+#model ->ones,(X[,'X4']),(X[,'X1'])^3,(X[,'X3'])^4
+X_training_model<-cbind(training_ones,X_training_set[,"X4"],(X_training_set[,"X1"])^3,(X_training_set[ ,"X3"])^4)
 training_thetahat=solve(t(X_training_model) %*% X_training_model) %*% t(X_training_model) %*% Y_training_data
 
-### Model out/Prediction 
+### Model output or model prediction 
 #creating X testing model 
 testing_ones = matrix(1, length(X_testing_set[,"X1"]), 1)
-X_testing_model = cbind(testing_ones,X_testing_set[,"X4"],(X_testing_set[,"X1"])^2,(X_testing_set[ ,"X1"])^3,(X_testing_set[,"X3"])^4) 
+#selecting X_test_set variables needed as per model 2
+X_testing_model = cbind(testing_ones,X_testing_set[,"X4"],(X_testing_set[,"X1"])^3,(X_testing_set[ ,"X3"])^4) 
+#computing model output on testing data model
 Y_testing_hat = X_testing_model%*% training_thetahat 
 Y_testing_hat 
 RSS_testing=sum((Y_testing_set-Y_testing_hat)^2) 
 RSS_testing
 
+#calculating 95% confidence intervals
+##qnorm for normal dist, 0.975 as two sided, 
+#sample_sd <- sd(X_testing_data)
+#sample_size <- nrow(X_testing_data)
+#sample_mean <- mean(X_testing_data)
+z <- qnorm(0.975) #as two sided 
+#t <- 2.262 for n-1
+# ci = sample mean (+/-) z value * (s.d./ root of sample size)
+# ci = sample mean (+/-) t(n-1) value * (s.d./ root of sample size)
+#c_i_pos <- sample_mean + z * (sample_sd/sqrt(sample_size))
+#c_i_neg <- sample_mean - z * (sample_sd/sqrt(sample_size))
+
+
+error <- Y_testing_set - Y_testing_hat
+n_len=length(Y_testing_hat)
+C_I_1 = z * sqrt( (error * (1-error) ) / n_len)
 
 
 
 
+#task 3
+## Model 2 will be used, parameter are selected and kept constant.
+arr_1=0
+arr_2=0
+f_value=0
+s_value=0
+model2_thetahat
+#values from thetahat
+thetabias <- 0.448299550 #chosen parameter
+thetaone <- 0.038109255 # chosen parameter
+thetatwo <- 0.009827804 # constant value
+thetafour <- 0.002092558 # constant value
+Epsilon <- RSS_Model_2 * 2 ## fixing value of epsilon
+num <- 100 #number of iteration
 
+##Calculating Y-hat for performing rejection ABC
+counter <- 0
+for (i in 1:num) {
+  range1 <- runif(1,-0.448299550,0.448299550) # calculating the range
+  range1
+  range2 <- runif(1,-0.038109255,0.038109255)
+  New_thetahat <- matrix(c(range1,range2,thetatwo,thetafour))
+  New_Y_Hat <- Xmodel2 %*% New_thetahat ## New Y hat
+  new_RSS <- sum((Y-New_Y_Hat)^2)
+  new_RSS
+  if (new_RSS > Epsilon){
+    arr_1[i] <- range1
+    arr_2[i] <- range2
+    counter = counter+1
+    f_value <- matrix(arr_1)
+    s_value <- matrix(arr_2)
+  }
+}
+
+par(mfrow = c(1,1))
+hist(f_value)
+hist(s_value)
+###plotting the graph
+par(mfrow = c(1,1))
+plot(f_value,s_value, col = c("red", "blue"), main = "Joint and Marginal Posterior Distribution")
