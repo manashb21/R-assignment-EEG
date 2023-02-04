@@ -141,10 +141,12 @@ abline(lm(X[,'X4'] ~ Y), col = 'red')
 
 
 #TASK 2
-ones = matrix(1 , length(X)/4,1)
+ones = matrix(1 , nrow(X), 1)
 ones
 #2.1
 #estimating model parameters using Least squares theta-hat
+# thetahat <- Inverse(Xtr %*% X) %*% Xtr %*% Y
+
 Xmodel1 <- cbind(ones,(X[,'X4']),(X[,'X1'])^2,(X[,'X1'])^3,(X[,'X2'])^4,(X[,'X1'])^4)
 model1_thetahat = solve(t(Xmodel1)%*%Xmodel1)%*%t(Xmodel1)%*%Y
 
@@ -281,61 +283,58 @@ qqline(model5_error, col = "red",lwd=1)
 ## Chose model 2 based on the values of AIC and BIC, (Lower the better), and low RSS means
 ## better fit of the regression equation for the data 
 
-### Task 2.7 ## Splitting the data of y into 2 form i.e. Training and testing data set.
+### Task 2.7 ## Binding X and Y table into one 
+XY_table <- cbind(X,Y)
+split_XY<-initial_split(data = as.data.frame(XY_table),prop=.7)
 set.seed(1353)
-split_Y<-initial_split(data = as.data.frame(Y),prop=.7)
-# Training Y data split 
-Y_training_set<-training(split_Y) 
-Y_testing_set<-as.matrix(testing(split_Y)) 
-## Testing Y data split 
-Y_training_data<-as.matrix(Y_training_set)
-
-
-## Splitting the data of X into 2 form i.e. Training and testing data set. 
-split_X<-initial_split(data = as.data.frame(X),prop=.7) 
-## Training X data split 
-X_training_set<-training(split_X) 
-## Testing X data split 
-X_testing_set<-as.matrix(testing(split_X)) 
-X_testing_data<-as.matrix(X_testing_set) 
-X_training_data<-as.matrix(X_training_set)
+XY_training_df <- training(split_XY)
+XY_testing_df <- testing(split_XY)
+XY_training_set<-as.matrix(training(split_XY) )
+XY_testing_set<-as.matrix(testing(split_XY))
 
 
 ### Estimating model parameters using Training set 
-training_ones=matrix(1 , length(X_training_set$X1),1) 
+training_ones=matrix(1 , nrow(XY_training_set),1) 
 #model ->ones,(X[,'X4']),(X[,'X1'])^3,(X[,'X3'])^4
-X_training_model<-cbind(training_ones,X_training_set[,"X4"],(X_training_set[,"X1"])^3,(X_training_set[ ,"X3"])^4)
-training_thetahat=solve(t(X_training_model) %*% X_training_model) %*% t(X_training_model) %*% Y_training_data
+X_training_model<-cbind(training_ones,XY_training_set[,"X4"],(XY_training_set[,"X1"])^3,(XY_training_set[ ,"X3"])^4)
+training_thetahat=solve(t(X_training_model) %*% X_training_model) %*% t(X_training_model) %*% XY_training_set[,"Y"]
 
 ### Model output or model prediction 
 #creating X testing model 
-testing_ones = matrix(1, length(X_testing_set[,"X1"]), 1)
+testing_ones = matrix(1, length(XY_testing_set[,"X1"]), 1)
 #selecting X_test_set variables needed as per model 2
-X_testing_model = cbind(testing_ones,X_testing_set[,"X4"],(X_testing_set[,"X1"])^3,(X_testing_set[ ,"X3"])^4) 
-#computing model output on testing data model
+X_testing_model = cbind(testing_ones,XY_testing_set[,"X4"],(XY_testing_set[,"X1"])^3,(XY_testing_set[ ,"X3"])^4) 
+#computing model output on testing data model using the training_thetahat parameters
 Y_testing_hat = X_testing_model%*% training_thetahat 
 Y_testing_hat 
-RSS_testing=sum((Y_testing_set-Y_testing_hat)^2) 
+RSS_testing=sum((XY_testing_set[,"Y"]-Y_testing_hat)^2) 
 RSS_testing
 
-#calculating 95% confidence intervals
+#calculating 95% confidence intervals of the testing set ? OR the predicted y_testing_hat
+
+#table with confidence intervals calculated of Y-testing-hat
+XY_df <- as.data.frame.matrix(cbind(XY_testing_df[,"Y"],  Y_testing_hat, Y_testing_hat + c_i_neg, Y_testing_hat + c_i_pos))
+colnames(XY_df) <- c("Y","Yhat","lower","upper")
+
+#sapply only applicable with dfs
+#sapply(XY_testing_df[c("X1","X3","X4")],sd)
+
+sample_sd <- sd(XY_df[,"Yhat"])
+sample_size <- nrow(XY_df)
+sample_mean <- mean(XY_df[,"Yhat"])
 ##qnorm for normal dist, 0.975 as two sided, 
-#sample_sd <- sd(X_testing_data)
-#sample_size <- nrow(X_testing_data)
-#sample_mean <- mean(X_testing_data)
-z <- qnorm(0.975) #as two sided 
-#t <- 2.262 for n-1
+z <- qnorm(0.975)         #as two sided 
+
 # ci = sample mean (+/-) z value * (s.d./ root of sample size)
-# ci = sample mean (+/-) t(n-1) value * (s.d./ root of sample size)
-#c_i_pos <- sample_mean + z * (sample_sd/sqrt(sample_size))
-#c_i_neg <- sample_mean - z * (sample_sd/sqrt(sample_size))
+c_i_pos <- sample_mean + z * (sample_sd/sqrt(sample_size))
+c_i_neg <- sample_mean - z * (sample_sd/sqrt(sample_size))
 
 
-error <- Y_testing_set - Y_testing_hat
-n_len=length(Y_testing_hat)
-C_I_1 = z * sqrt( (error * (1-error) ) / n_len)
-
-
+ggplot(XY_df, aes(x=row.names(XY_df)))+
+  geom_point(aes(y = Yhat))+
+  geom_point(aes(x=row.names(XY_df), y=Y), colour = "#E7B800")+
+  geom_errorbar(aes(ymin = lower, ymax=upper))+
+  theme(axis.text.x = element_text(angle = 90))
 
 
 #task 3
