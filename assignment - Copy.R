@@ -131,6 +131,26 @@ plot(X[,"X4"], Y, main = "Scatter Plot: X4 and Y signal", xlab = "X4 signal",
      ylab = "Output Signal")
 abline(lm(X[,'X4'] ~ Y), col = 'red')
 
+#using ggplot 
+XY_table <- as.data.frame(cbind(X,Y))
+
+ggplot(XY_table, aes(x = X1, y=Y))+
+  geom_point()+
+  geom_smooth(method = lm, se= FALSE, colour = "red")+
+  ggtitle("Correlation and Scatter Plot of X1 and Y")
+ggplot(XY_table, aes(x = X2, y=Y))+
+  geom_point()+
+  geom_smooth(method = lm, se= FALSE, colour = "red")+
+  ggtitle("Correlation and Scatter Plot of X2 and Y")
+ggplot(XY_table, aes(x = X3, y=Y))+
+  geom_point()+
+  geom_smooth(method = lm, se= FALSE, colour = "red")+
+  ggtitle("Correlation and Scatter Plot of X3 and Y")
+ggplot(XY_table, aes(x = X4, y=Y))+
+  geom_point()+
+  geom_smooth(method = lm, se= FALSE, colour = "red")+
+  ggtitle("Correlation and Scatter Plot of X4 and Y")
+
 #correlation 
 #install.packages("corrplot")
 #par(mfrow = c(1,1))
@@ -149,18 +169,23 @@ ones
 
 Xmodel1 <- cbind(ones,(X[,'X4']),(X[,'X1'])^2,(X[,'X1'])^3,(X[,'X2'])^4,(X[,'X1'])^4)
 model1_thetahat = solve(t(Xmodel1)%*%Xmodel1)%*%t(Xmodel1)%*%Y
+write.csv(model1_thetahat, "results/model1thetahat.csv")
 
 Xmodel2 <- cbind(ones,(X[,'X4']),(X[,'X1'])^3,(X[,'X3'])^4)
 model2_thetahat = solve(t(Xmodel2)%*%Xmodel2)%*%t(Xmodel2)%*%Y
+write.csv(model2_thetahat, "results/model2thetahat.csv")
 
 Xmodel3 <- cbind(ones,(X[,'X3'])^3,(X[,'X3'])^4)
 model3_thetahat = solve(t(Xmodel3)%*%Xmodel3)%*%t(Xmodel3)%*%Y
+write.csv(model3_thetahat, "results/model3thetahat.csv")
 
 Xmodel4 <- cbind(ones,(X[,'X2']),(X[,'X1'])^3,(X[,'X3'])^4)
 model4_thetahat = solve(t(Xmodel4)%*%Xmodel4)%*%t(Xmodel4)%*%Y
+write.csv(model4_thetahat, "results/model4thetahat.csv")
 
 Xmodel5 <- cbind(ones,(X[,'X4']),(X[,'X1'])^2,(X[,'X1'])^3,(X[,'X3'])^4)
 model5_thetahat = solve(t(Xmodel5)%*%Xmodel5)%*%t(Xmodel5)%*%Y
+write.csv(model5_thetahat, "results/model5thetahat.csv")
 
 #Calculating Y-hat and RSS Model 1
 Y_hat_m1 = Xmodel1 %*% model1_thetahat
@@ -325,17 +350,38 @@ sample_mean <- mean(XY_df[,"Yhat"])
 ##qnorm for normal dist, 0.975 as two sided, 
 z <- qnorm(0.975)         #as two sided 
 
+
 # ci = sample mean (+/-) z value * (s.d./ root of sample size)
 c_i_pos <- sample_mean + z * (sample_sd/sqrt(sample_size))
 c_i_neg <- sample_mean - z * (sample_sd/sqrt(sample_size))
-
+# ci = sample mean (+/-) t(n-1) value * (s.d./ root of sample size)
+c_i_pos <- sample_mean + t * (sample_sd/sqrt(sample_size))
+c_i_neg <- sample_mean - t * (sample_sd/sqrt(sample_size))
 
 ggplot(XY_df, aes(x=row.names(XY_df)))+
   geom_point(aes(y = Yhat))+
-  geom_point(aes(x=row.names(XY_df), y=Y), colour = "#E7B800")+
+  geom_hline(yintercept = mean(Y))+
+  #geom_point(aes(x=row.names(XY_df), y=Y), colour = "#E7B800")+
   geom_errorbar(aes(ymin = lower, ymax=upper))+
   theme(axis.text.x = element_text(angle = 90))
 
+#using the t-distribution
+#no. of independent variables in model 2 = 3
+t <- 2     # for n-1, 61-1=60 degree of freedom
+
+c_i_pos_t <- sample_mean + t * (sample_sd/sqrt(sample_size))
+c_i_neg_t <- sample_mean - t * (sample_sd/sqrt(sample_size))
+
+XY_df_1 <- as.data.frame.matrix(cbind(XY_testing_df[,"Y"],  Y_testing_hat, Y_testing_hat + c_i_neg_t, Y_testing_hat + c_i_pos_t))
+colnames(XY_df_1) <- c("Y","Yhat","lower","upper")
+
+
+ggplot(XY_df_1, aes(x=row.names(XY_df_1)))+
+  geom_point(aes(y = Yhat))+
+  #geom_hline(yintercept = mean(Y))+
+  #geom_point(aes(x=row.names(XY_df), y=Y), colour = "#E7B800")+
+  geom_errorbar(aes(ymin = lower, ymax=upper))+
+  theme(axis.text.x = element_text(angle = 90))
 
 #task 3
 ## Model 2 will be used, parameter are selected and kept constant.
