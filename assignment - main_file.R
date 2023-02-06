@@ -1,3 +1,4 @@
+# set working directory first to source file location
 library(matlib)
 library(ggplot2)
 library(rsample)
@@ -153,11 +154,11 @@ ggplot(XY_table, aes(x = X4, y=Y))+
 
 #correlation 
 #install.packages("corrplot")
-#par(mfrow = c(1,1))
-#library(corrplot)
-#cor_df = cbind(X, Y)
-#cor_tab = cor(cor_df)
-#corrplot(cor_tab, method = "number", type = "upper")
+par(mfrow = c(1,1))
+library(corrplot)
+cor_df = cbind(X, Y)
+cor_tab = cor(cor_df)
+corrplot(cor_tab, method = "number", type = "upper")
 
 
 #TASK 2
@@ -282,8 +283,8 @@ BIC_model5=K_model5*log(N)-2*likelihood_5
 BIC_model5
 
 ## Task 2.5
-par(mfrow = c(3,2))
 ## Error of model1
+par(mfrow = c(1,1))
 model1_error <- Y-Y_hat_m1
 ## Plotting the graph QQplot and QQ line of model 1
 qqnorm(model1_error, col = "darkcyan",main = "QQ plot of model 1")
@@ -305,13 +306,15 @@ model5_error <- Y-Y_hat_m5
 qqnorm(model5_error, col = "darkcyan",main = "QQ plot of model 5")
 qqline(model5_error, col = "red",lwd=1)
 
+#Task 2.6
 ## Chose model 2 based on the values of AIC and BIC, (Lower the better), and low RSS means
 ## better fit of the regression equation for the data 
 
 ### Task 2.7 ## Binding X and Y table into one 
 XY_table <- cbind(X,Y)
-split_XY<-initial_split(data = as.data.frame(XY_table),prop=.7)
 set.seed(1353)
+split_XY<-initial_split(data = as.data.frame(XY_table),prop=.7)
+
 XY_training_df <- training(split_XY)
 XY_testing_df <- testing(split_XY)
 XY_training_set<-as.matrix(training(split_XY) )
@@ -335,39 +338,13 @@ Y_testing_hat
 RSS_testing=sum((XY_testing_set[,"Y"]-Y_testing_hat)^2) 
 RSS_testing
 
-#calculating 95% confidence intervals of the testing set ? OR the predicted y_testing_hat
-
-#table with confidence intervals calculated of Y-testing-hat
-XY_df <- as.data.frame.matrix(cbind(XY_testing_df[,"Y"],  Y_testing_hat, Y_testing_hat + c_i_neg, Y_testing_hat + c_i_pos))
-colnames(XY_df) <- c("Y","Yhat","lower","upper")
-
-#sapply only applicable with dfs
-#sapply(XY_testing_df[c("X1","X3","X4")],sd)
-
-sample_sd <- sd(XY_df[,"Yhat"])
-sample_size <- nrow(XY_df)
-sample_mean <- mean(XY_df[,"Yhat"])
-##qnorm for normal dist, 0.975 as two sided, 
-z <- qnorm(0.975)         #as two sided 
-
-
-# ci = sample mean (+/-) z value * (s.d./ root of sample size)
-c_i_pos <- sample_mean + z * (sample_sd/sqrt(sample_size))
-c_i_neg <- sample_mean - z * (sample_sd/sqrt(sample_size))
-# ci = sample mean (+/-) t(n-1) value * (s.d./ root of sample size)
-c_i_pos <- sample_mean + t * (sample_sd/sqrt(sample_size))
-c_i_neg <- sample_mean - t * (sample_sd/sqrt(sample_size))
-
-ggplot(XY_df, aes(x=row.names(XY_df)))+
-  geom_point(aes(y = Yhat))+
-  geom_hline(yintercept = mean(Y))+
-  #geom_point(aes(x=row.names(XY_df), y=Y), colour = "#E7B800")+
-  geom_errorbar(aes(ymin = lower, ymax=upper))+
-  theme(axis.text.x = element_text(angle = 90))
-
+#calculating 95% confidence intervals of the predicted y_testing_hat
 #using the t-distribution
 #no. of independent variables in model 2 = 3
 t <- 2     # for n-1, 61-1=60 degree of freedom
+sample_sd <- sd(Y_testing_hat)  
+sample_size <- nrow(Y_testing_hat)
+sample_mean <- mean(Y_testing_hat)
 
 c_i_pos_t <- sample_mean + t * (sample_sd/sqrt(sample_size))
 c_i_neg_t <- sample_mean - t * (sample_sd/sqrt(sample_size))
@@ -378,10 +355,19 @@ colnames(XY_df_1) <- c("Y","Yhat","lower","upper")
 
 ggplot(XY_df_1, aes(x=row.names(XY_df_1)))+
   geom_point(aes(y = Yhat))+
-  #geom_hline(yintercept = mean(Y))+
-  #geom_point(aes(x=row.names(XY_df), y=Y), colour = "#E7B800")+
+  geom_point(aes(y=Y), color = "red")+
   geom_errorbar(aes(ymin = lower, ymax=upper))+
   theme(axis.text.x = element_text(angle = 90))
+
+#density plot of Y testing data with confidence intervals
+ggplot(data = data.frame(XY_testing_df[,"Y"]), aes(XY_testing_df[,"Y"])) +
+  geom_density(col = "black" , lwd=0.7) +
+  geom_vline(xintercept = c_i_neg_t, col = "red", linetype = "dashed") +
+  geom_vline(xintercept = c_i_pos_t, col = "red", linetype = "dashed") +
+  geom_rug()+
+  ggtitle("Distribution of Y testing data with 95% CI")+
+  xlab("Y testing data") +
+  ylab("Density")
 
 #task 3
 ## Model 2 will be used, parameter are selected and kept constant.
@@ -390,21 +376,22 @@ arr_2=0
 f_value=0
 s_value=0
 model2_thetahat
+
 #values from thetahat
-thetabias <- 0.448299550 #chosen parameter
-thetaone <- 0.038109255 # chosen parameter
-thetatwo <- 0.009827804 # constant value
-thetafour <- 0.002092558 # constant value
+thetaone <- 0.483065688 # chosen parameter #largest 
+thetatwo <- 0.143578928 # chosen parameter #2nd largest
+thetathree <- 0.010038614 # constant value
+thetabias <- -0.001912836 # constant value
+
 Epsilon <- RSS_Model_2 * 2 ## fixing value of epsilon
 num <- 100 #number of iteration
 
 ##Calculating Y-hat for performing rejection ABC
 counter <- 0
 for (i in 1:num) {
-  range1 <- runif(1,-0.448299550,0.448299550) # calculating the range
-  range1
-  range2 <- runif(1,-0.038109255,0.038109255)
-  New_thetahat <- matrix(c(range1,range2,thetatwo,thetafour))
+  range1 <- runif(1,-0.483065688,0.483065688) # calculating the range using uniform stochastic model
+  range2 <- runif(1,-0.143578928,0.143578928)
+  New_thetahat <- matrix(c(range1,range2,thetathree,thetabias))
   New_Y_Hat <- Xmodel2 %*% New_thetahat ## New Y hat
   new_RSS <- sum((Y-New_Y_Hat)^2)
   new_RSS
